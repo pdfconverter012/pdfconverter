@@ -3,10 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Webseite</title>
+    <title>PDF Kombinierer</title>
 </head>
 <body>
-    <h1>Willkommen auf meiner Webseite!</h1>
-    <p>Dies ist eine einfache Webseite, die mit GitHub Pages gehostet wird.</p>
+    <h1>PDF Kombinierer</h1>
+    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+        <label for="front">Vorderseiten PDF:</label>
+        <input type="file" id="front" name="front" accept="application/pdf" required><br><br>
+        <label for="back">Rückseiten PDF:</label>
+        <input type="file" id="back" name="back" accept="application/pdf" required><br><br>
+        <button type="submit">PDFs kombinieren</button>
+    </form>
+    <script>
+        document.getElementById('upload-form').onsubmit = function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    return response.text().then(text => { throw new Error(text); });
+                }
+            })
+            .then(blob => {
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'kombiniert.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                alert('Fehler: ' + error.message);
+            });
+        };
+    </script>
 </body>
 </html>
