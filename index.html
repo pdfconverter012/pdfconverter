@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Kombinierer</title>
-    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1"></script>
+    <title>PDF Kombinierer:</title>
+    <!-- Lade die pdf-lib Bibliothek von CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
     <h1>PDF Kombinierer</h1>
@@ -27,38 +28,49 @@
                 return;
             }
 
-            const frontPdfBytes = await frontFile.arrayBuffer();
-            const backPdfBytes = await backFile.arrayBuffer();
+            try {
+                const frontPdfBytes = await frontFile.arrayBuffer();
+                const backPdfBytes = await backFile.arrayBuffer();
 
-            const frontPdfDoc = await PDFLib.PDFDocument.load(frontPdfBytes);
-            const backPdfDoc = await PDFLib.PDFDocument.load(backPdfBytes);
+                // Lade die PDFs
+                const frontPdfDoc = await PDFLib.PDFDocument.load(frontPdfBytes);
+                const backPdfDoc = await PDFLib.PDFDocument.load(backPdfBytes);
 
-            const numPages = frontPdfDoc.getPageCount();
-            if (numPages !== backPdfDoc.getPageCount()) {
-                alert('Die Anzahl der Seiten in den beiden PDFs muss übereinstimmen.');
-                return;
+                const numPages = frontPdfDoc.getPageCount();
+                if (numPages !== backPdfDoc.getPageCount()) {
+                    alert('Die Anzahl der Seiten in den beiden PDFs muss übereinstimmen.');
+                    return;
+                }
+
+                // Erstelle ein neues PDF-Dokument
+                const mergedPdf = await PDFLib.PDFDocument.create();
+
+                // Füge die Seiten hinzu
+                for (let i = 0; i < numPages; i++) {
+                    const [frontPage] = await mergedPdf.copyPages(frontPdfDoc, [i]);
+                    const [backPage] = await mergedPdf.copyPages(backPdfDoc, [numPages - 1 - i]);
+                    mergedPdf.addPage(frontPage);
+                    mergedPdf.addPage(backPage);
+                }
+
+                const mergedPdfBytes = await mergedPdf.save();
+
+                // Erstelle einen Blob und starte den Download
+                const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'kombiniert.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                console.log('Download gestartet');
+            } catch (error) {
+                console.error('Fehler beim Kombinieren der PDFs:', error);
+                alert('Es gab ein Problem beim Kombinieren der PDFs.');
             }
-
-            const mergedPdf = await PDFLib.PDFDocument.create();
-
-            for (let i = 0; i < numPages; i++) {
-                const [frontPage] = await mergedPdf.copyPages(frontPdfDoc, [i]);
-                const [backPage] = await mergedPdf.copyPages(backPdfDoc, [numPages - 1 - i]);
-                mergedPdf.addPage(frontPage);
-                mergedPdf.addPage(backPage);
-            }
-
-            const mergedPdfBytes = await mergedPdf.save();
-
-            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'kombiniert.pdf';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
         };
     </script>
 </body>
