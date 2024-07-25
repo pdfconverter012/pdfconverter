@@ -4,18 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Kombinierer</title>
-    <!-- Lade die pdf-lib Bibliothek von CDN -->
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        #main-content {
+            flex: 1;
+        }
+        #slideshow {
+            width: 300px; /* oder eine gewünschte Breite */
+            height: 400px; /* oder eine gewünschte Höhe */
+            position: relative;
+            overflow: hidden;
+            margin-left: 20px;
+        }
+        #slideshow img {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        #slideshow img.active {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-    <h1>PDF Kombinierer</h1>
-    <form id="upload-form">
-        <label for="front">Vorderseiten PDF:</label>
-        <input type="file" id="front" name="front" accept="application/pdf" required><br><br>
-        <label for="back">Rückseiten PDF:</label>
-        <input type="file" id="back" name="back" accept="application/pdf" required><br><br>
-        <button type="submit">PDFs kombinieren</button>
-    </form>
+    <div id="main-content">
+        <h1>PDF Kombinierer</h1>
+        <form id="upload-form">
+            <label for="front">Vorderseiten PDF:</label>
+            <input type="file" id="front" name="front" accept="application/pdf" required><br><br>
+            <label for="back">Rückseiten PDF:</label>
+            <input type="file" id="back" name="back" accept="application/pdf" required><br><br>
+            <button type="submit">PDFs kombinieren</button>
+        </form>
+    </div>
+    <div id="slideshow">
+        <!-- Hier werden die Bilder eingefügt -->
+        <img src="1.png" alt="Bild 1" class="active">
+        <img src="2.png" alt="Bild 2">
+        <img src="3.png" alt="Bild 3">
+        <img src="4.png" alt="Bild 4">
+        <img src="5.png" alt="Bild 5">
+        <img src="6.png" alt="Bild 6">
+        <img src="7.png" alt="Bild 7">
+        <img src="8.png" alt="Bild 8">
+        <img src="9.png" alt="Bild 9">
+        <img src="10.png" alt="Bild 10">
+        <img src="11.png" alt="Bild 11">
+        <img src="12.png" alt="Bild 12">
+        <img src="13.png" alt="Bild 13">
+        <img src="14.png" alt="Bild 14">
+    </div>
     <script>
         document.getElementById('upload-form').onsubmit = async function(event) {
             event.preventDefault();
@@ -32,7 +79,6 @@
                 const frontPdfBytes = await frontFile.arrayBuffer();
                 const backPdfBytes = await backFile.arrayBuffer();
 
-                // Lade die PDFs
                 const frontPdfDoc = await PDFLib.PDFDocument.load(frontPdfBytes);
                 const backPdfDoc = await PDFLib.PDFDocument.load(backPdfBytes);
 
@@ -42,10 +88,8 @@
                     return;
                 }
 
-                // Erstelle ein neues PDF-Dokument
                 const mergedPdf = await PDFLib.PDFDocument.create();
 
-                // Füge die Seiten hinzu
                 for (let i = 0; i < numPages; i++) {
                     const [frontPage] = await mergedPdf.copyPages(frontPdfDoc, [i]);
                     const [backPage] = await mergedPdf.copyPages(backPdfDoc, [numPages - 1 - i]);
@@ -55,7 +99,6 @@
 
                 const mergedPdfBytes = await mergedPdf.save();
 
-                // Erstelle einen Blob und starte den Download
                 const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -72,6 +115,25 @@
                 alert('Es gab ein Problem beim Kombinieren der PDFs.');
             }
         };
+
+        // Slideshow-Funktionalität
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('#slideshow img');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            showSlide(currentSlide);
+        }
+
+        setInterval(nextSlide, 3000); // Wechselt alle 3 Sekunden das Bild
     </script>
 </body>
 </html>
+
