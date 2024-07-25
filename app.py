@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, render_template
 import PyPDF2
 import os
 
@@ -21,6 +21,10 @@ def combine_pdfs(front_pdf_path, back_pdf_path, output_pdf_path):
 
     with open(output_pdf_path, "wb") as output_file:
         output_pdf.write(output_file)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
@@ -48,3 +52,4 @@ if __name__ == '__main__':
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
     app.run(debug=True)
+
