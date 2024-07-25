@@ -15,8 +15,8 @@
             flex: 1;
         }
         #slideshow {
-            width: 400px; /* Setze die Breite entsprechend dem Verhältnis 5:4 */
-            height: 320px; /* Setze die Höhe entsprechend dem Verhältnis 5:4 */
+            width: 500px; /* Setze die Breite entsprechend dem Verhältnis 5:4 */
+            height: 400px; /* Setze die Höhe entsprechend dem Verhältnis 5:4 */
             position: relative;
             overflow: hidden;
             margin-left: 20px;
@@ -30,7 +30,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             opacity: 0;
-            transition: opacity 1s;
+            transition: opacity 0s; /* Übergangseffekt entfernt */
         }
         #slideshow img.active {
             opacity: 1;
