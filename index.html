@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Kombinierer</title>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1"></script>
 </head>
 <body>
     <h1>PDF Kombinierer</h1>
-    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+    <form id="upload-form">
         <label for="front">Vorderseiten PDF:</label>
         <input type="file" id="front" name="front" accept="application/pdf" required><br><br>
         <label for="back">Rückseiten PDF:</label>
@@ -15,33 +16,49 @@
         <button type="submit">PDFs kombinieren</button>
     </form>
     <script>
-        document.getElementById('upload-form').onsubmit = function(event) {
+        document.getElementById('upload-form').onsubmit = async function(event) {
             event.preventDefault();
-            var formData = new FormData(this);
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.blob();
-                } else {
-                    return response.text().then(text => { throw new Error(text); });
-                }
-            })
-            .then(blob => {
-                var url = window.URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = 'kombiniert.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-            })
-            .catch(error => {
-                alert('Fehler: ' + error.message);
-            });
+
+            const frontFile = document.getElementById('front').files[0];
+            const backFile = document.getElementById('back').files[0];
+
+            if (!frontFile || !backFile) {
+                alert('Es müssen zwei Dateien hochgeladen werden');
+                return;
+            }
+
+            const frontPdfBytes = await frontFile.arrayBuffer();
+            const backPdfBytes = await backFile.arrayBuffer();
+
+            const frontPdfDoc = await PDFLib.PDFDocument.load(frontPdfBytes);
+            const backPdfDoc = await PDFLib.PDFDocument.load(backPdfBytes);
+
+            const numPages = frontPdfDoc.getPageCount();
+            if (numPages !== backPdfDoc.getPageCount()) {
+                alert('Die Anzahl der Seiten in den beiden PDFs muss übereinstimmen.');
+                return;
+            }
+
+            const mergedPdf = await PDFLib.PDFDocument.create();
+
+            for (let i = 0; i < numPages; i++) {
+                const [frontPage] = await mergedPdf.copyPages(frontPdfDoc, [i]);
+                const [backPage] = await mergedPdf.copyPages(backPdfDoc, [numPages - 1 - i]);
+                mergedPdf.addPage(frontPage);
+                mergedPdf.addPage(backPage);
+            }
+
+            const mergedPdfBytes = await mergedPdf.save();
+
+            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'kombiniert.pdf';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
         };
     </script>
 </body>
